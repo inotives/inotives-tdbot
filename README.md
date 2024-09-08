@@ -1,6 +1,7 @@
 # inotives-tdbots
 
-This repos is to record my experiment of developing trading bots using python along with packages like TA-lib, backtesting etc. 
+This repos record my experiment with backtesting lib (bt) and TA-lib to simulate backtesting strategies with OHLCV crypto data. 
+After refining the backtesting, next would be to work on implementing them into bots or create those into dashboards to present as summarize startegy. 
 
 ## Trading Strategis Implemented
 Here are the few trading strategies i am working on this repo:
@@ -27,6 +28,8 @@ Common Indicators:
 - Pivot points
 - Volume analysis
   
+## Other Strategies that plan to work on
+
 #### Scalping Strategy (wip)
 A scalping strategy involves making a large number of small, quick trades throughout the day. The goal is to capture very small price movements in a short time. Profit from small price changes over a brief period, typically using leverage to amplify returns.
 

@@ -101,6 +101,88 @@ def signaling_with_ADX(price_data, period, name, adx_threshold=20):
     ])
 
     return bt.Backtest(bt_strategy, close_price)
+
+
+def signaling_with_Bollinger(price_data, period, name, num_std=2):
+    """
+    Create buy/sell signals based on Bollinger Bands for a mean reversion strategy.
+
+    price_data: DataFrame with 'close' prices
+    period: the lookback period for Bollinger Bands calculation
+    name: strategy name
+    num_std: number of standard deviations to define the bands (default 2)
+    """
+    
+    # Ensure price_data contains the necessary 'close' column
+    if 'close' not in price_data.columns:
+        raise ValueError("price_data must contain a 'close' column")
+    
+    # Calculate Bollinger Bands using TA-lib
+    upper_band, middle_band, lower_band = talib.BBANDS(price_data['close'], timeperiod=period, nbdevup=num_std, nbdevdn=num_std, matype=0)
+    
+
+    # Fill any NaN values in bands with the first valid value
+    upper_band = upper_band.fillna(method='bfill')
+    middle_band = middle_band.fillna(method='bfill')
+    lower_band = lower_band.fillna(method='bfill')
+
+    # Create signals DataFrame with buy (1) and sell (-1) signals
+    bband = price_data.copy()
+    bband['signal'] = 0
+    bband.loc[ bband['close'] < lower_band, 'signal' ] = -1
+    bband.loc[ bband['close'] > upper_band, 'signal' ] = 1
+
+    signals = bband[['signal']].rename(columns={'signal': 'close'})
+
+    # Define your strategy
+    bt_strategy = bt.Strategy(name, [
+        bt.algos.WeighTarget(signals),
+        bt.algos.Rebalance()
+    ])
+
+    return bt.Backtest(bt_strategy, price_data)
+    
+
+
+
+
+def signaling_with_RSI(price_data, period, name, rsi_overbought=70, rsi_oversold=30):
+    """
+    Create buy/sell signals based on RSI levels using TA-lib and `bt`.
+    
+    price_data: DataFrame with 'close' prices
+    period: the lookback period for RSI calculation
+    name: strategy name
+    rsi_overbought: threshold for overbought RSI (default 70)
+    rsi_oversold: threshold for oversold RSI (default 30)
+    """
+
+    # Ensure price_data contains the necessary 'close' column
+    if 'close' not in price_data.columns:
+        raise ValueError("price_data must contain a 'close' column")
+    
+    # Calculate RSI
+    rsi = talib.RSI(price_data['close'], timeperiod=period).to_frame()
+    rsi.rename(columns={rsi.columns[0]: 'rsi'}, inplace=True)
+
+    rsi['signal'] = 0
+    
+    # Buy signal when RSI is below the oversold threshold
+    rsi.loc[rsi['rsi'] < rsi_oversold, 'signal' ] = 1
+    
+    # Sell signal when RSI is above the overbought threshold
+    rsi.loc[rsi['rsi'] > rsi_overbought, 'signal' ] = -1
+
+    signals = rsi[['signal']].rename(columns={'signal': 'close'})
+
+    bt_strategy = bt.Strategy(name, [
+        bt.algos.WeighTarget(signals),
+        bt.algos.Rebalance()
+    ])
+
+    return bt.Backtest(bt_strategy, price_data)
+    
+
     
 
 
